@@ -11,6 +11,15 @@ import { createDrawerNavigator, DrawerItems } from 'react-navigation-drawer';
 import { createAppContainer } from 'react-navigation';
 import { Icon } from 'react-native-elements';
 import SafeAreaView from 'react-native-safe-area-view';
+import { connect } from 'react-redux';
+import { fetchCampsites, fetchComments, fetchPromotions, fetchPartners } from '../redux/ActionCreators';
+
+const mapDispatchToProps = {
+    fetchCampsites,
+    fetchComments,
+    fetchPromotions,
+    fetchPartners
+};
 
 const DirectoryNavigator = createStackNavigator(
     {
@@ -139,17 +148,13 @@ const MainNavigator = createDrawerNavigator(
         Home: {
             screen: HomeNavigator,
             navigationOptions: {
-                drawerIcon: ({ tintColor }) => (
-                    <Icon name="home" type="font-awesome" size={24} color={tintColor} />
-                )
+                drawerIcon: ({ tintColor }) => <Icon name="home" type="font-awesome" size={24} color={tintColor} />
             }
         },
         Directory: {
             screen: DirectoryNavigator,
             navigationOptions: {
-                drawerIcon: ({ tintColor }) => (
-                    <Icon name="list" type="font-awesome" size={24} color={tintColor} />
-                )
+                drawerIcon: ({ tintColor }) => <Icon name="list" type="font-awesome" size={24} color={tintColor} />
             }
         },
         About: {
@@ -180,6 +185,13 @@ const MainNavigator = createDrawerNavigator(
 const AppNavigator = createAppContainer(MainNavigator);
 
 class Main extends Component {
+    componentDidMount() {
+        this.props.fetchCampsites();
+        this.props.fetchComments();
+        this.props.fetchPromotions();
+        this.props.fetchPartners();
+    }
+
     render() {
         return (
             <View
@@ -223,4 +235,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Main;
+export default connect(null, mapDispatchToProps)(Main);
