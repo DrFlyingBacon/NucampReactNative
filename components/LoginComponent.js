@@ -4,6 +4,8 @@ import { Input, CheckBox, Button, Icon } from 'react-native-elements';
 import * as SecureStore from 'expo-secure-store';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import * as MediaLibrary from 'expo-media-library';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { baseUrl } from '../shared/baseUrl';
 
@@ -20,7 +22,9 @@ class LoginTab extends Component {
 
     static navigationOptions = {
         title: 'Login',
-        tabBarIcon: ({ tintColor }) => <Icon name="sign-in" type="font-awesome" iconStyle={{ color: tintColor }} />
+        tabBarIcon: ({ tintColor }) => (
+            <Icon name="sign-in" type="font-awesome" iconStyle={{ color: tintColor }} />
+        )
     };
 
     handleLogin() {
@@ -34,7 +38,9 @@ class LoginTab extends Component {
                 })
             ).catch(error => console.log('Could not save user info', error));
         } else {
-            SecureStore.deleteItemAsync('userinfo').catch(error => console.log('Could not delete user info', error));
+            SecureStore.deleteItemAsync('userinfo').catch(error =>
+                console.log('Could not delete user info', error)
+            );
         }
     }
 
@@ -79,7 +85,14 @@ class LoginTab extends Component {
                     <Button
                         onPress={() => this.handleLogin()}
                         title="Login"
-                        icon={<Icon name="sign-in" type="font-awesome" color="#fff" iconStyle={{ marginRight: 10 }} />}
+                        icon={
+                            <Icon
+                                name="sign-in"
+                                type="font-awesome"
+                                color="#fff"
+                                iconStyle={{ marginRight: 10 }}
+                            />
+                        }
                         buttonStyle={{ backgroundColor: '#5637DD' }}
                     />
                 </View>
@@ -89,7 +102,12 @@ class LoginTab extends Component {
                         title="Register"
                         type="clear"
                         icon={
-                            <Icon name="user-plus" type="font-awesome" color="blue" iconStyle={{ marginRight: 10 }} />
+                            <Icon
+                                name="user-plus"
+                                type="font-awesome"
+                                color="blue"
+                                iconStyle={{ marginRight: 10 }}
+                            />
                         }
                         titleStyle={{ color: 'blue' }}
                     />
@@ -116,7 +134,9 @@ class RegisterTab extends Component {
 
     static navigationOptions = {
         title: 'Register',
-        tabBarIcon: ({ tintColor }) => <Icon name="user-plus" type="font-awesome" iconStyle={{ color: tintColor }} />
+        tabBarIcon: ({ tintColor }) => (
+            <Icon name="user-plus" type="font-awesome" iconStyle={{ color: tintColor }} />
+        )
     };
 
     getImageFromCamera = async () => {
@@ -130,7 +150,31 @@ class RegisterTab extends Component {
             });
             if (!capturedImage.cancelled) {
                 console.log(capturedImage);
-                this.setState({ imageUrl: capturedImage.uri });
+                this.processImage(capturedImage.uri);
+            }
+        }
+    };
+
+    processImage = async imgUri => {
+        const processedImage = await manipulateAsync(imgUri, [{ resize: { width: 400 } }], {
+            format: SaveFormat.PNG
+        });
+        MediaLibrary.saveToLibraryAsync(processedImage.uri);
+        console.log(processedImage);
+        this.setState({ imageUrl: processedImage.uri });
+    };
+
+    getImageFromGallery = async () => {
+        const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+        if (cameraRollPermission.status === 'granted') {
+            const capturedImage = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if (!capturedImage.cancelled) {
+                console.log(capturedImage);
+                this.processImage(capturedImage.uri);
             }
         }
     };
@@ -143,7 +187,9 @@ class RegisterTab extends Component {
                 JSON.stringify({ username: this.state.username, password: this.state.password })
             ).catch(error => console.log('Could not save user info', error));
         } else {
-            SecureStore.deleteItemAsync('userinfo').catch(error => console.log('Could not delete user info', error));
+            SecureStore.deleteItemAsync('userinfo').catch(error =>
+                console.log('Could not delete user info', error)
+            );
         }
     }
 
@@ -158,6 +204,7 @@ class RegisterTab extends Component {
                             style={styles.image}
                         />
                         <Button title="Camera" onPress={this.getImageFromCamera} />
+                        <Button title="Gallery" onPress={this.getImageFromGallery} />
                     </View>
                     <Input
                         placeholder="Username"
